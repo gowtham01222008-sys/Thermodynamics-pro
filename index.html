@@ -1,0 +1,473 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Advanced Thermodynamic Cycle Analyzer & Heat System Calculator</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        .tab-active { @apply bg-blue-500 text-white shadow-lg; }
+        .input-field { @apply w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent; }
+        .result-card { @apply bg-gradient-to-r from-blue-50 to-indigo-50 border-l-4 border-blue-500 p-6 rounded-lg shadow-md; }
+        .formula-box { @apply bg-gray-100 border border-gray-300 p-4 rounded-lg font-mono text-sm my-3; }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-gray-50 to-blue-50 min-h-screen py-8">
+    <div class="container mx-auto px-4 max-w-7xl">
+        <!-- Header -->
+        <div class="text-center mb-12">
+            <h1 class="text-5xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent mb-4">
+                Advanced Thermodynamic Cycle Analyzer
+            </h1>
+            <p class="text-xl text-gray-600 max-w-2xl mx-auto">
+                Professional tool for analyzing thermodynamic cycles and heat transfer systems in power plants, refrigeration, and HVAC applications
+            </p>
+        </div>
+
+        <!-- Tabs Navigation -->
+        <div class="bg-white rounded-2xl shadow-2xl p-1 mb-8 sticky top-4 z-10" style="backdrop-filter: blur(20px);">
+            <nav class="flex flex-wrap justify-center -mb-px">
+                <button class="tab-btn px-8 py-4 font-semibold text-lg tab-active" data-tab="otto">Otto Cycle</button>
+                <button class="tab-btn px-8 py-4 font-semibold text-lg" data-tab="rankine">Rankine Cycle</button>
+                <button class="tab-btn px-8 py-4 font-semibold text-lg" data-tab="heatex">Heat Exchanger</button>
+                <button class="tab-btn px-8 py-4 font-semibold text-lg" data-tab="ref">Refrigeration</button>
+                <button class="tab-btn px-8 py-4 font-semibold text-lg" data-tab="wall">Composite Wall</button>
+            </nav>
+        </div>
+
+        <!-- Otto Cycle Tab -->
+        <div id="otto" class="tab-content bg-white rounded-2xl shadow-2xl p-12 mb-8">
+            <div class="grid md:grid-cols-2 gap-12 items-start">
+                <div>
+                    <h2 class="text-3xl font-bold text-gray-800 mb-8">Otto Cycle Analysis (Gasoline Engine)</h2>
+                    
+                    <div class="space-y-6">
+                        <div>
+                            <label class="block text-lg font-semibold mb-2">Compression Ratio (r)</label>
+                            <input type="number" id="otto_r" class="input-field" value="8" min="1" max="20" step="0.1">
+                        </div>
+                        <div>
+                            <label class="block text-lg font-semibold mb-2">Gamma (γ)</label>
+                            <input type="number" id="otto_gamma" class="input-field" value="1.4" min="1" max="2" step="0.01">
+                        </div>
+                        <div>
+                            <label class="block text-lg font-semibold mb-2">Initial Temperature T1 (K)</label>
+                            <input type="number" id="otto_t1" class="input-field" value="300" min="200" max="1000">
+                        </div>
+                        <div>
+                            <label class="block text-lg font-semibold mb-2">Heat Input Qin (kJ/kg)</label>
+                            <input type="number" id="otto_qin" class="input-field" value="800" min="0" step="1">
+                        </div>
+                    </div>
+                    
+                    <button onclick="calculateOtto()" class="mt-8 w-full bg-gradient-to-r from-blue-500 to-blue-600 text-white py-4 px-8 rounded-xl text-xl font-bold hover:from-blue-600 hover:to-blue-700 transform hover:scale-105 transition-all duration-200 shadow-xl">
+                        Calculate Otto Cycle
+                    </button>
+                </div>
+
+                <div id="otto-results" class="space-y-6 hidden">
+                    <div class="result-card">
+                        <h3 class="text-2xl font-bold text-blue-700 mb-3">Results</h3>
+                        <div id="otto-output" class="text-2xl font-mono space-y-2"></div>
+                    </div>
+                    
+                    <div class="formula-box">
+                        <strong>Formulas Used:</strong><br>
+                        η = 1 - (1/r)<sup>(γ-1)</sup><br>
+                        T2 = T1 × r<sup>(γ-1)</sup><br>
+                        W_net = η × Qin
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Rankine Cycle Tab -->
+        <div id="rankine" class="tab-content hidden bg-white rounded-2xl shadow-2xl p-12 mb-8">
+            <div class="grid md:grid-cols-2 gap-12 items-start">
+                <div>
+                    <h2 class="text-3xl font-bold text-gray-800 mb-8">Rankine Cycle Analysis (Steam Power Plant)</h2>
+                    
+                    <div class="space-y-6">
+                        <div>
+                            <label class="block text-lg font-semibold mb-2">Turbine Work Wt (kJ/kg)</label>
+                            <input type="number" id="rankine_wt" class="input-field" value="1200" min="0">
+                        </div>
+                        <div>
+                            <label class="block text-lg font-semibold mb-2">Pump Work Wp (kJ/kg)</label>
+                            <input type="number" id="rankine_wp" class="input-field" value="20" min="0">
+                        </div>
+                        <div>
+                            <label class="block text-lg font-semibold mb-2">Heat Input Qin (kJ/kg)</label>
+                            <input type="number" id="rankine_qin" class="input-field" value="3000" min="0">
+                        </div>
+                    </div>
+                    
+                    <button onclick="calculateRankine()" class="mt-8 w-full bg-gradient-to-r from-green-500 to-green-600 text-white py-4 px-8 rounded-xl text-xl font-bold hover:from-green-600 hover:to-green-700 transform hover:scale-105 transition-all duration-200 shadow-xl">
+                        Calculate Rankine Cycle
+                    </button>
+                </div>
+
+                <div id="rankine-results" class="space-y-6 hidden">
+                    <div class="result-card bg-gradient-to-r from-green-50 to-emerald-50 border-l-green-500">
+                        <h3 class="text-2xl font-bold text-green-700 mb-3">Results</h3>
+                        <div id="rankine-output" class="text-2xl font-mono space-y-2"></div>
+                    </div>
+                    
+                    <div class="formula-box">
+                        <strong>Formulas Used:</strong><br>
+                        W_net = Wt - Wp<br>
+                        η = W_net / Qin × 100%
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Heat Exchanger Tab -->
+        <div id="heatex" class="tab-content hidden bg-white rounded-2xl shadow-2xl p-12 mb-8">
+            <div class="grid md:grid-cols-2 gap-12 items-start">
+                <div>
+                    <h2 class="text-3xl font-bold text-gray-800 mb-8">Counter-Flow Heat Exchanger</h2>
+                    
+                    <div class="space-y-6">
+                        <div>
+                            <label class="block text-lg font-semibold mb-2">ΔT1 (°C)</label>
+                            <input type="number" id="hex_dt1" class="input-field" value="80" min="0">
+                        </div>
+                        <div>
+                            <label class="block text-lg font-semibold mb-2">ΔT2 (°C)</label>
+                            <input type="number" id="hex_dt2" class="input-field" value="40" min="0">
+                        </div>
+                        <div>
+                            <label class="block text-lg font-semibold mb-2">Overall HTC U (W/m²K)</label>
+                            <input type="number" id="hex_u" class="input-field" value="500" min="0">
+                        </div>
+                        <div>
+                            <label class="block text-lg font-semibold mb-2">Area A (m²)</label>
+                            <input type="number" id="hex_a" class="input-field" value="10" min="0">
+                        </div>
+                    </div>
+                    
+                    <button onclick="calculateHeatEx()" class="mt-8 w-full bg-gradient-to-r from-orange-500 to-orange-600 text-white py-4 px-8 rounded-xl text-xl font-bold hover:from-orange-600 hover:to-orange-700 transform hover:scale-105 transition-all duration-200 shadow-xl">
+                        Calculate Heat Exchanger
+                    </button>
+                </div>
+
+                <div id="heatex-results" class="space-y-6 hidden">
+                    <div class="result-card bg-gradient-to-r from-orange-50 to-amber-50 border-l-orange-500">
+                        <h3 class="text-2xl font-bold text-orange-700 mb-3">Results</h3>
+                        <div id="heatex-output" class="text-2xl font-mono space-y-2"></div>
+                    </div>
+                    
+                    <div class="formula-box">
+                        <strong>Formulas Used:</strong><br>
+                        LMTD = (ΔT1 - ΔT2) / ln(ΔT1/ΔT2)<br>
+                        Q = U × A × LMTD
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Refrigeration Tab -->
+        <div id="ref" class="tab-content hidden bg-white rounded-2xl shadow-2xl p-12 mb-8">
+            <div class="grid md:grid-cols-2 gap-12 items-start">
+                <div>
+                    <h2 class="text-3xl font-bold text-gray-800 mb-8">Vapor Compression Refrigeration</h2>
+                    
+                    <div class="space-y-6">
+                        <div>
+                            <label class="block text-lg font-semibold mb-2">Refrigeration Effect QL (kJ/kg)</label>
+                            <input type="number" id="ref_ql" class="input-field" value="150" min="0">
+                        </div>
+                        <div>
+                            <label class="block text-lg font-semibold mb-2">Compressor Work W (kJ/kg)</label>
+                            <input type="number" id="ref_w" class="input-field" value="50" min="0">
+                        </div>
+                    </div>
+                    
+                    <button onclick="calculateRef()" class="mt-8 w-full bg-gradient-to-r from-purple-500 to-purple-600 text-white py-4 px-8 rounded-xl text-xl font-bold hover:from-purple-600 hover:to-purple-700 transform hover:scale-105 transition-all duration-200 shadow-xl">
+                        Calculate Refrigeration System
+                    </button>
+                </div>
+
+                <div id="ref-results" class="space-y-6 hidden">
+                    <div class="result-card bg-gradient-to-r from-purple-50 to-violet-50 border-l-purple-500">
+                        <h3 class="text-2xl font-bold text-purple-700 mb-3">Results</h3>
+                        <div id="ref-output" class="text-2xl font-mono space-y-2"></div>
+                    </div>
+                    
+                    <div class="formula-box">
+                        <strong>Formulas Used:</strong><br>
+                        COP = QL / W
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Composite Wall Tab -->
+        <div id="wall" class="tab-content hidden bg-white rounded-2xl shadow-2xl p-12 mb-8">
+            <div class="grid md:grid-cols-2 gap-12 items-start">
+                <div>
+                    <h2 class="text-3xl font-bold text-gray-800 mb-8">Composite Wall Heat Conduction</h2>
+                    
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-lg font-semibold mb-2">Layer 1: k (W/mK), L (m)</label>
+                            <input type="number" id="wall_k1" class="input-field w-24 mr-2" value="0.8" step="0.01">,
+                            <input type="number" id="wall_l1" class="input-field w-24 ml-2" value="0.1" step="0.01">
+                        </div>
+                        <div>
+                            <label class="block text-lg font-semibold mb-2">Layer 2: k (W/mK), L (m)</label>
+                            <input type="number" id="wall_k2" class="input-field w-24 mr-2" value="0.2" step="0.01">,
+                            <input type="number" id="wall_l2" class="input-field w-24 ml-2" value="0.05" step="0.01">
+                        </div>
+                        <div>
+                            <label class="block text-lg font-semibold mb-2">Layer 3: k (W/mK), L (m)</label>
+                            <input type="number" id="wall_k3" class="input-field w-24 mr-2" value="1.5" step="0.01">,
+                            <input type="number" id="wall_l3" class="input-field w-24 ml-2" value="0.08" step="0.01">
+                        </div>
+                        <div>
+                            <label class="block text-lg font-semibold mb-2">Area A (m²)</label>
+                            <input type="number" id="wall_a" class="input-field" value="5" min="0">
+                        </div>
+                        <div>
+                            <label class="block text-lg font-semibold mb-2">T_hot (°C)</label>
+                            <input type="number" id="wall_thot" class="input-field" value="200">
+                        </div>
+                        <div>
+                            <label class="block text-lg font-semibold mb-2">T_cold (°C)</label>
+                            <input type="number" id="wall_tcold" class="input-field" value="50">
+                        </div>
+                    </div>
+                    
+                    <button onclick="calculateWall()" class="mt-8 w-full bg-gradient-to-r from-indigo-500 to-indigo-600 text-white py-4 px-8 rounded-xl text-xl font-bold hover:from-indigo-600 hover:to-indigo-700 transform hover:scale-105 transition-all duration-200 shadow-xl">
+                        Calculate Composite Wall
+                    </button>
+                </div>
+
+                <div id="wall-results" class="space-y-6 hidden">
+                    <div class="result-card bg-gradient-to-r from-indigo-50 to-blue-50 border-l-indigo-500">
+                        <h3 class="text-2xl font-bold text-indigo-700 mb-3">Results</h3>
+                        <div id="wall-output" class="text-2xl font-mono space-y-2"></div>
+                    </div>
+                    
+                    <div class="formula-box">
+                        <strong>Formulas Used:</strong><br>
+                        R = L/(k×A) per layer<br>
+                        R_total = R1 + R2 + R3<br>
+                        Q = (T_hot - T_cold) / R_total
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Validation Status -->
+        <div id="validation-status" class="fixed bottom-6 right-6 bg-green-500 text-white px-6 py-3 rounded-full shadow-2xl hidden font-semibold">
+            ✓ Test Case Passed!
+        </div>
+    </div>
+
+    <script>
+        // Tab Navigation
+        document.querySelectorAll('.tab-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const tab = btn.dataset.tab;
+                
+                // Update active tab
+                document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('tab-active'));
+                btn.classList.add('tab-active');
+                
+                // Show active tab content
+                document.querySelectorAll('.tab-content').forEach(content => content.classList.add('hidden'));
+                document.getElementById(tab).classList.remove('hidden');
+                
+                // Hide all results
+                document.querySelectorAll('[id$="-results"]').forEach(res => res.classList.add('hidden'));
+            });
+        });
+
+        // Real-time calculation functions
+        function safeDivide(a, b, defaultValue = 0) {
+            return b === 0 ? defaultValue : a / b;
+        }
+
+        function calculateOtto() {
+            const r = parseFloat(document.getElementById('otto_r').value);
+            const gamma = parseFloat(document.getElementById('otto_gamma').value);
+            const t1 = parseFloat(document.getElementById('otto_t1').value);
+            const qin = parseFloat(document.getElementById('otto_qin').value);
+
+            if (!isFinite(r) || !isFinite(gamma) || !isFinite(t1) || !isFinite(qin) || r <= 1 || qin <= 0) {
+                alert('Please enter valid values');
+                return;
+            }
+
+            const efficiency = (1 - Math.pow(1/r, gamma-1)) * 100;
+            const t2 = t1 * Math.pow(r, gamma-1);
+            const work = efficiency/100 * qin;
+
+            const output = `
+Thermal Efficiency: ${efficiency.toFixed(1)}%<br>
+T2 (Max Temperature): ${t2.toFixed(0)} K<br>
+Net Work Output: ${work.toFixed(0)} kJ/kg<br>
+Mean Effective Pressure: ${(work * 1000 / (0.287 * t1 * (r-1)/(gamma-1))).toFixed(0)} kPa
+            `;
+
+            document.getElementById('otto-output').innerHTML = output;
+            document.getElementById('otto-results').classList.remove('hidden');
+            
+            // Test case validation
+            if (Math.abs(r-8)<0.1 && Math.abs(efficiency-56.5)<1) {
+                showValidation('Otto Cycle test passed!');
+            }
+        }
+
+        function calculateRankine() {
+            const wt = parseFloat(document.getElementById('rankine_wt').value);
+            const wp = parseFloat(document.getElementById('rankine_wp').value);
+            const qin = parseFloat(document.getElementById('rankine_qin').value);
+
+            if (!isFinite(wt) || !isFinite(wp) || !isFinite(qin) || qin <= 0) {
+                alert('Please enter valid values');
+                return;
+            }
+
+            const wnet = wt - wp;
+            const efficiency = safeDivide(wnet, qin, 0) * 100;
+            const power = (wnet / qin) * 1000; // MW per kg/s
+
+            const output = `
+Net Work Output: ${wnet.toFixed(0)} kJ/kg<br>
+Thermal Efficiency: ${efficiency.toFixed(1)}%<br>
+Power Output: ${power.toFixed(0)} kW/(kg/s)
+            `;
+
+            document.getElementById('rankine-output').innerHTML = output;
+            document.getElementById('rankine-results').classList.remove('hidden');
+            
+            if (Math.abs(efficiency-39.3)<1) {
+                showValidation('Rankine Cycle test passed!');
+            }
+        }
+
+        function calculateHeatEx() {
+            const dt1 = parseFloat(document.getElementById('hex_dt1').value);
+            const dt2 = parseFloat(document.getElementById('hex_dt2').value);
+            const u = parseFloat(document.getElementById('hex_u').value);
+            const a = parseFloat(document.getElementById('hex_a').value);
+
+            if (!isFinite(dt1) || !isFinite(dt2) || !isFinite(u) || !isFinite(a) || dt1 <= dt2 || u <= 0 || a <= 0) {
+                alert('Please enter valid values (ΔT1 > ΔT2 > 0)');
+                return;
+            }
+
+            const lmtd = (dt1 - dt2) / Math.log(dt1/dt2);
+            const q = u * a * lmtd / 1000; // kW
+
+            const output = `
+LMTD: ${lmtd.toFixed(1)} °C<br>
+Heat Transfer Rate: ${q.toFixed(1)} kW<br>
+Effectiveness: ${((1-Math.exp(-(u*a/Math.min(dt1,dt2))))*100).toFixed(1)}%
+            `;
+
+            document.getElementById('heatex-output').innerHTML = output;
+            document.getElementById('heatex-results').classList.remove('hidden');
+            
+            if (Math.abs(lmtd-57.7)<0.5 && Math.abs(q-288.5)<1) {
+                showValidation('Heat Exchanger test passed!');
+            }
+        }
+
+        function calculateRef() {
+            const ql = parseFloat(document.getElementById('ref_ql').value);
+            const w = parseFloat(document.getElementById('ref_w').value);
+
+            if (!isFinite(ql) || !isFinite(w) || w <= 0) {
+                alert('Please enter valid values');
+                return;
+            }
+
+            const cop = ql / w;
+
+            const output = `
+COP: ${cop.toFixed(2)}<br>
+Refrigeration Effect: ${ql.toFixed(0)} kJ/kg<br>
+Compressor Work: ${w.toFixed(0)} kJ/kg
+            `;
+
+            document.getElementById('ref-output').innerHTML = output;
+            document.getElementById('ref-results').classList.remove('hidden');
+            
+            if (Math.abs(cop-3)<0.1) {
+                showValidation('Refrigeration test passed!');
+            }
+        }
+
+        function calculateWall() {
+            const k1 = parseFloat(document.getElementById('wall_k1').value);
+            const l1 = parseFloat(document.getElementById('wall_l1').value);
+            const k2 = parseFloat(document.getElementById('wall_k2').value);
+            const l2 = parseFloat(document.getElementById('wall_l2').value);
+            const k3 = parseFloat(document.getElementById('wall_k3').value);
+            const l3 = parseFloat(document.getElementById('wall_l3').value);
+            const a = parseFloat(document.getElementById('wall_a').value);
+            const thot = parseFloat(document.getElementById('wall_thot').value) + 273.15;
+            const tcold = parseFloat(document.getElementById('wall_tcold').value) + 273.15;
+
+            if (![k1,k2,k3,l1,l2,l3,a].some(v => !isFinite(v) || v <= 0)) {
+                alert('Please enter valid values');
+                return;
+            }
+
+            const r1 = l1 / (k1 * a);
+            const r2 = l2 / (k2 * a);
+            const r3 = l3 / (k3 * a);
+            const rtotal = r1 + r2 + r3;
+            const q = (thot - tcold) / rtotal;
+
+            const output = `
+Layer 1 Resistance: ${r1.toFixed(4)} K/W<br>
+Layer 2 Resistance: ${r2.toFixed(4)} K/W<br>
+Layer 3 Resistance: ${r3.toFixed(4)} K/W<br>
+Total Resistance: ${rtotal.toFixed(4)} K/W<br>
+Heat Transfer Rate: ${q.toFixed(0)} W
+            `;
+
+            document.getElementById('wall-output').innerHTML = output;
+            document.getElementById('wall-results').classList.remove('hidden');
+            
+            if (Math.abs(q-1750)<50) {
+                showValidation('Composite Wall test passed!');
+            }
+        }
+
+        function showValidation(message) {
+            const status = document.getElementById('validation-status');
+            status.textContent = message;
+            status.classList.remove('hidden');
+            setTimeout(() => status.classList.add('hidden'), 3000);
+        }
+
+        // Auto-calculate on input change (debounced)
+        let timeout;
+        document.querySelectorAll('input').forEach(input => {
+            input.addEventListener('input', () => {
+                clearTimeout(timeout);
+                timeout = setTimeout(() => {
+                    const tab = input.closest('.tab-content').id;
+                    if (tab === 'otto') calculateOtto();
+                    if (tab === 'rankine') calculateRankine();
+                    if (tab === 'heatex') calculateHeatEx();
+                    if (tab === 'ref') calculateRef();
+                    if (tab === 'wall') calculateWall();
+                }, 500);
+            });
+        });
+
+        // Load test cases on startup
+        window.onload = () => {
+            calculateOtto();
+        };
+    </script>
+</body>
+</html>
